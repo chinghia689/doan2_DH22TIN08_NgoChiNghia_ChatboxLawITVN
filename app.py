@@ -3,10 +3,10 @@ from dotenv import load_dotenv
 from rag.load_split import load_split
 from rag.embedding import get_embeddings
 from rag.retriever import retriever
-from rag.chain import built_chain
+from rag.graph import RAGGraph
 
 load_dotenv()
-api_key=os.getenv('GOOGLE_API_KEY')
+api_key=os.getenv('GROQ_API_KEY')
 if not api_key:
     raise('Not key')
 
@@ -16,11 +16,23 @@ path_folder=os.path.join(dir_file,'data')
 doc=load_split(path_folder)
 embeddings=get_embeddings()
 retrievers=retriever(doc,embeddings)
-answer=built_chain(retrievers)
-
-print("Nhập câu hỏi (gõ exit để thoát):")
+rag_system=RAGGraph(retrievers)
+print(f'Nhap cau hoi vao day: ')
 while True:
-    q = input(">> ")
-    if q.lower() == "exit":
+    print(f'Ban: ')
+    query=input()
+    if query.lower() in ['exit','quit']:
         break
-    print("AI:", answer.invoke(q))
+    if not query.strip():
+        continue
+
+    inputs={'question':query}
+
+    final_answer=''
+
+    for output in rag_system.app.stream(inputs):
+        for node,result in output.items():
+            if 'generation' in result:
+                final_answer= result['generation']
+    print(f'AI: {final_answer}')
+

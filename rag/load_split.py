@@ -18,8 +18,8 @@ def load_split(folder_path):
         all_file.extend(docs)
 
     spliter=RecursiveCharacterTextSplitter(
-        chunk_size=2000,
-        chunk_overlap=400,
+        chunk_size=1000,
+        chunk_overlap=150,
         separators=['\n\n','\n','.',' ','']
     )
     return spliter.split_documents(all_file)

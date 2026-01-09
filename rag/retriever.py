@@ -4,7 +4,7 @@ from langchain_community.retrievers import BM25Retriever
 from langchain_core.runnables import RunnableLambda, RunnableParallel
 
 def deduplicate_docs(data):
-    bm25_docs=data.get('bm25',[]),
+    bm25_docs=data.get('bm25',[])
     chroma_docs=data.get('chroma',[])
 
     unique_docs=[]
@@ -33,10 +33,10 @@ def retriever(docs,embeddings,persist_dir="./chroma_db"):
             embedding=embeddings,
             persist_directory=persist_dir
         )
-    chroma_retriever=chroma.as_retriever(search_kwargs={'k':5})
+    chroma_retriever=chroma.as_retriever(search_kwargs={'k':10})
 
     bm25_retriever=BM25Retriever.from_documents(docs)
-    bm25_retriever.k=5
+    bm25_retriever.k=10
 
     retriever=RunnableParallel(
         vector=chroma_retriever,
