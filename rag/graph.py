@@ -12,7 +12,11 @@ class RAGGraph:
         models='llama-3.1-8b-instant'
         self.llm=ChatGroq(
             model=models,
-            temperature=0
+            temperature=0.1,
+            model_kwargs={
+                "presence_penalty": 0.6,  
+                "frequency_penalty": 1.2
+                }
             )
         self.app=self.build_graph()
 
@@ -66,7 +70,17 @@ class RAGGraph:
             3. **KHÔNG CÓ THÔNG TIN**
             - Trả lời nguyên văn:
             "Tài liệu được cung cấp không chứa thông tin để trả lời câu hỏi này."
+            
+            4. **LƯU Ý ĐẶC BIỆT**
+            - Với câu hỏi "Ai ban hành": chỉ trả lời nếu Context có nêu rõ cơ quan ban hành.
+            - Không sử dụng các cụm từ suy đoán như: "theo hiểu biết", "thông thường".
+            - Chỉ dùng: "Theo tài liệu được cung cấp".
 
+            ### HƯỚNG DẪN XỬ LÝ (NGHIÊM NGẶT)
+            1. **TỔNG HỢP:** Nếu câu hỏi yêu cầu "tóm tắt" hoặc "liệt kê", hãy tổng hợp thông tin.
+            2. **TRÍCH DẪN KÈM NGUỒN:** Ghi tên file nguồn ngay sau ý trích dẫn.
+            3. **CHỐNG LẶP:** Chỉ liệt kê tối đa 3-5 căn cứ pháp lý quan trọng nhất. KHÔNG lặp lại một điều luật 2 lần.
+            
             ### ĐỊNH DẠNG CÂU TRẢ LỜI
 
             **1. Câu trả lời trực tiếp:**
@@ -74,13 +88,8 @@ class RAGGraph:
 
             **2. Căn cứ pháp lý:**
             - Trích dẫn nội dung liên quan.
-            - Nguồn: [Ghi tên file tài liệu tại đây]
 
             ---
-            **LƯU Ý ĐẶC BIỆT**
-            - Với câu hỏi "Ai ban hành": chỉ trả lời nếu Context có nêu rõ cơ quan ban hành.
-            - Không sử dụng các cụm từ suy đoán như: "theo hiểu biết", "thông thường".
-            - Chỉ dùng: "Theo tài liệu được cung cấp".
 
             ### BẮT ĐẦU TRẢ LỜI:
             """
