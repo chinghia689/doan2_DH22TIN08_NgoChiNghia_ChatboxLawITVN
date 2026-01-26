@@ -1,7 +1,20 @@
 import customtkinter as ctk
 import requests
 import threading
+import re
 from datetime import datetime
+
+# ================= HELPER FUNCTIONS =================
+def clean_markdown(text):
+    """Loại bỏ markdown formatting cho CTkLabel"""
+    # Loại bỏ bold/italic
+    text = re.sub(r'\*\*\*(.*?)\*\*\*', r'\1', text)  # ***text***
+    text = re.sub(r'\*\*(.*?)\*\*', r'\1', text)      # **text**
+    text = re.sub(r'\*(.*?)\*', r'\1', text)          # *text*
+    text = re.sub(r'_(.*?)_', r'\1', text)            # _text_
+    # Loại bỏ markdown links nhưng giữ text
+    text = re.sub(r'\[(.*?)\]\(.*?\)', r'\1', text)   # [text](url)
+    return text
 
 # ================= CẤU HÌNH GIAO DIỆN (CHATGPT STYLE) =================
 API_URL = "http://localhost:8000/chat"
@@ -108,9 +121,10 @@ class ChatApp(ctk.CTk):
         )
 
         # Label nội dung
+        cleaned_text = clean_markdown(text)  # Loại bỏ markdown
         content = ctk.CTkLabel(
             bubble,
-            text=text,
+            text=cleaned_text,
             font=self.font_msg,
             text_color=TEXT_COLOR,
             wraplength=320, # Tự xuống dòng

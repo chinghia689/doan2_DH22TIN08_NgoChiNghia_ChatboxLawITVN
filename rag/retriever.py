@@ -5,7 +5,7 @@ from langchain_core.runnables import RunnableLambda, RunnableParallel
 
 def deduplicate_docs(data):
     bm25_docs=data.get('bm25',[])
-    chroma_docs=data.get('chroma',[])
+    chroma_docs=data.get('vector',[])
 
     unique_docs=[]
     seen_content=set()
