@@ -20,11 +20,11 @@ class RAGGraph:
             )
         self.app=self.build_graph()
 
-    def retriever_node(self, state:GraphState):
+    async def retriever_node(self, state:GraphState):
         question=state['question']
-        document=self.retriever.invoke(question)
+        document=await self.retriever.ainvoke(question)
         return ({'document':document})
-    def generation_node(self, state:GraphState):
+    async def generation_node(self, state:GraphState):
         try:
             question=state['question']
             document=state['document']
@@ -117,15 +117,20 @@ Hãy trả lời:
 
             chain= prompt | self.llm | StrOutputParser()
 
-            answer=chain.invoke({'question':question,'context':context_text})
+            answer=await chain.ainvoke({'question':question,'context':context_text})
 
             return ({'generation':answer})
         except Exception as e:
             msg = str(e).lower()
+            print(f"[ERROR] generation_node exception: {e}")  # Log để debug
 
             if 'rate limit' in msg or '429' in msg or 'quota' in msg:
                 return {
-                    'generation': 'Your tokens have expired'
+                    'generation': 'Hệ thống đang quá tải. Vui lòng thử lại sau ít phút.'
+                }
+            else:
+                return {
+                    'generation': f'Đã xảy ra lỗi trong quá trình xử lý. Chi tiết: {str(e)}'
                 }
     
     def build_graph(self):

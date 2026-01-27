@@ -1,0 +1,40 @@
+# =============================================
+# DEVELOPMENT DEPENDENCIES
+# Cài đặt: pip install -r requirements-dev.txt
+# (Sẽ tự động cài requirements.txt trước)
+# =============================================
+
+# --- Include Production Dependencies ---
+-r requirements.txt
+
+# --- Deep Learning (Local Models) ---
+torch
+torchvision
+transformers
+tensorflow
+tf-keras
+
+# --- Data Analysis & Visualization ---
+scikit-learn
+matplotlib
+seaborn
+
+# --- Jupyter & Notebooks ---
+jupyter
+ipykernel
+notebook
+
+# --- Testing ---
+pytest
+pytest-asyncio
+pytest-cov
+
+# --- Code Quality ---
+black
+flake8
+isort
+mypy
+
+# --- Debugging ---
+ipdb
+rich

@@ -27,6 +27,7 @@ def built_chain(retriever):
     def docs_to_context(docs):
         context='\n\n'.join(d.page_content for d in docs)
         context=context[:MAX_CONTEXT_LENGTH]
+        return context
     rag_chain=({
         'context':retriever|RunnableLambda(docs_to_context),
         'question':RunnablePassthrough()

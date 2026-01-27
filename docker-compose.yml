@@ -1,6 +1,9 @@
 version: '3.8'
 
 services:
+  # =============================================
+  # PRODUCTION Backend
+  # =============================================
   backend:
     build:
       context: .
@@ -12,9 +15,6 @@ services:
       - GROQ_API_KEY=${GROQ_API_KEY}
       - GOOGLE_API_KEY=${GOOGLE_API_KEY}
     volumes:
-      # Mount source code for development (comment out for production)
-      - ./rag:/app/rag
-      - ./main.py:/app/main.py
       # Persist vector database
       - ./chroma_db:/app/chroma_db
       # Mount law documents
@@ -23,12 +23,45 @@ services:
       - rag-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/docs"]
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/docs" ]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      start_period: 60s
 
+  # =============================================
+  # DEVELOPMENT Backend (use: docker-compose --profile dev up backend-dev)
+  # =============================================
+  backend-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: rag-backend-dev
+    ports:
+      - "8000:8000"
+      - "8888:8888" # Jupyter
+    environment:
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+    volumes:
+      # Mount source code for hot-reload
+      - ./rag:/app/rag
+      - ./main.py:/app/main.py
+      - ./requirements.txt:/app/requirements.txt
+      - ./requirements-dev.txt:/app/requirements-dev.txt
+      # Persist vector database
+      - ./chroma_db:/app/chroma_db
+      # Mount law documents
+      - ./data:/app/data
+    networks:
+      - rag-network
+    restart: unless-stopped
+    profiles:
+      - dev
+
+  # =============================================
+  # PRODUCTION Frontend
+  # =============================================
   frontend:
     build:
       context: ./frontend
@@ -45,13 +78,15 @@ services:
       - rag-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
+      test: [ "CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/" ]
       interval: 30s
       timeout: 3s
       retries: 3
       start_period: 5s
 
-  # Development frontend service (alternative)
+  # =============================================
+  # DEVELOPMENT Frontend (use: docker-compose --profile dev up frontend-dev)
+  # =============================================
   frontend-dev:
     build:
       context: ./frontend
@@ -67,7 +102,7 @@ services:
       - ./frontend/index.html:/app/index.html
       - ./frontend/vite.config.ts:/app/vite.config.ts
     depends_on:
-      - backend
+      - backend-dev
     networks:
       - rag-network
     restart: unless-stopped

@@ -1,4 +1,5 @@
 import os
+import asyncio
 import uvicorn
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
@@ -17,6 +18,7 @@ if not api_key:
     raise ValueError('Not key')
 
 rag_system = None
+request_lock = asyncio.Lock()  # Lock để tránh rate limit khi gửi đồng thời
 
 
 @asynccontextmanager
@@ -52,9 +54,18 @@ class ChatResponse(BaseModel):
 
 @app.post("/chat", response_model=ChatResponse)
 async def chat_endpoint(req: ChatRequest):
-        inputs = {"question": req.question}
-        result = await rag_system.app.ainvoke(inputs)
-        answer = result.get("generation", "Lỗi xử lý")
+    try:
+        async with request_lock:  # Xử lý tuần tự để tránh Groq rate limit
+            inputs = {"question": req.question}
+            result = await rag_system.app.ainvoke(inputs)
+            answer = result.get("generation")
+        
+        if answer is None:
+            answer = "Không thể xử lý câu hỏi. Vui lòng thử lại."
+        
         return ChatResponse(answer=answer)
+    except Exception as e:
+        print(f"[ERROR] chat_endpoint: {e}")
+        return ChatResponse(answer=f"Lỗi server: {str(e)}")
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, workers=1, reload=False)

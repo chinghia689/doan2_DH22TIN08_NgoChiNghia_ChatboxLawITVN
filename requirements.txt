@@ -1,18 +1,13 @@
-# --- Core AI/Data ---
+# =============================================
+# PRODUCTION DEPENDENCIES
+# Dự án RAG Luật Việt Nam
+# =============================================
+
+# --- Core ---
 numpy
 pandas
-scikit-learn
-matplotlib
-jupyter
 tqdm
 python-dotenv
-
-# --- Deep Learning ---
-tensorflow
-tf-keras
-transformers
-torch
-torchvision
 
 # --- LangChain Ecosystem ---
 langchain
@@ -25,7 +20,7 @@ langchain-groq
 langchain-ollama
 langchain-huggingface
 
-# --- Database & Retrieval ---
+# --- Vector Database & Retrieval ---
 chromadb
 rank_bm25
 sentence-transformers
@@ -34,3 +29,10 @@ sentence-transformers
 unstructured
 python-docx
 pypdf
+
+# --- Web Backend ---
+fastapi
+uvicorn[standard]
+
+# --- Text Processing (Tiếng Việt) ---
+underthesea

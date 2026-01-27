@@ -1,0 +1,33 @@
+# =============================================
+# DEVELOPMENT Dockerfile - Vietnamese Law RAG Chatbot
+# Sử dụng: docker-compose --profile dev up backend-dev
+# =============================================
+FROM python:3.11-slim
+
+# Set working directory
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    curl \
+    git \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+# Copy requirements files
+COPY requirements.txt requirements-dev.txt ./
+
+# Install all dependencies (production + development)
+RUN pip install --no-cache-dir --upgrade pip \
+    && pip install --no-cache-dir -r requirements-dev.txt
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+
+# Expose ports (8000 for API, 8888 for Jupyter)
+EXPOSE 8000 8888
+
+# Default command (can be overridden)
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
