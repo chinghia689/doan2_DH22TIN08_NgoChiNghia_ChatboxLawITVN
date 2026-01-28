@@ -4,6 +4,73 @@ from langchain_core.output_parsers import StrOutputParser
 from langgraph.graph import END, StateGraph
 from rag.state import GraphState
 import os
+import re
+
+# Các pattern để nhận diện câu chào hỏi
+GREETING_PATTERNS = [
+    r'^(hi|hello|hey|xin chào|chào|chào bạn|alo|xin lỗi|cảm ơn|thank|thanks)[\s!?.]*$',
+    r'^(bạn là ai|bạn tên gì|giới thiệu|help|trợ giúp|hướng dẫn)[\s!?.]*$',
+    r'^(ok|okay|được|tốt|good|nice|great)[\s!?.]*$',
+]
+
+# Response cho greeting
+GREETING_RESPONSES = {
+    'greeting': """Xin chào! 👋 Tôi là **Trợ lý AI Luật** - chuyên tư vấn pháp luật công nghệ thông tin.
+
+Tôi có thể giúp bạn về:
+• Luật Công nghệ thông tin
+• Luật Khoa học công nghệ  
+• Luật Trí tuệ nhân tạo
+• Luật An toàn thông tin mạng
+
+**Hãy đặt câu hỏi pháp lý** để tôi hỗ trợ bạn! 
+
+Ví dụ: "Điều 5 Luật Công nghệ thông tin quy định gì?" """,
+    
+    'identity': """Tôi là **Trợ lý AI Luật** - một hệ thống AI được thiết kế để tư vấn pháp luật về công nghệ thông tin.
+
+Tôi sử dụng công nghệ RAG (Retrieval-Augmented Generation) để trích xuất thông tin chính xác từ các văn bản pháp luật.
+
+Hãy đặt câu hỏi về luật để tôi hỗ trợ bạn!""",
+
+    'thanks': """Không có gì! 😊 Nếu bạn có thêm câu hỏi pháp lý nào, hãy hỏi tôi nhé!""",
+    
+    'help': """**Hướng dẫn sử dụng:**
+
+1. Đặt câu hỏi cụ thể về pháp luật công nghệ thông tin
+2. Tôi sẽ tìm kiếm trong văn bản luật và trả lời với trích dẫn chính xác
+3. Mỗi câu trả lời đều có nguồn gốc từ văn bản pháp luật
+
+**Ví dụ câu hỏi:**
+- "Điều 10 Luật An toàn thông tin mạng là gì?"
+- "Trách nhiệm của tổ chức theo Luật Khoa học công nghệ?"
+- "Hành vi bị cấm trong Luật Công nghệ thông tin?"
+"""
+}
+
+def classify_input(question: str) -> str:
+    """Phân loại input: greeting, identity, thanks, help, hoặc legal_question"""
+    q = question.lower().strip()
+    
+    # Check greeting
+    if re.match(r'^(hi|hello|hey|xin chào|chào|chào bạn|alo)[\s!?.]*$', q, re.IGNORECASE):
+        return 'greeting'
+    
+    # Check identity question
+    if re.match(r'^(bạn là ai|bạn tên gì|bạn là gì|giới thiệu về bạn)[\s!?.]*$', q, re.IGNORECASE):
+        return 'identity'
+    
+    # Check thanks
+    if re.match(r'^(cảm ơn|thank|thanks|cám ơn|ok|okay|được rồi|tốt)[\s!?.]*$', q, re.IGNORECASE):
+        return 'thanks'
+    
+    # Check help
+    if re.match(r'^(help|trợ giúp|hướng dẫn|cách sử dụng)[\s!?.]*$', q, re.IGNORECASE):
+        return 'help'
+    
+    # Default: legal question
+    return 'legal_question'
+
 
 class RAGGraph:
     def __init__(self,retriever_chain):
@@ -133,14 +200,52 @@ Hãy trả lời:
                     'generation': f'Đã xảy ra lỗi trong quá trình xử lý. Chi tiết: {str(e)}'
                 }
     
+    async def classifier_node(self, state: GraphState):
+        """Node phân loại input: greeting hay legal question"""
+        question = state['question']
+        input_type = classify_input(question)
+        return {'input_type': input_type}
+    
+    async def greeting_node(self, state: GraphState):
+        """Node xử lý greeting - không cần query RAG"""
+        input_type = state.get('input_type', 'greeting')
+        response = GREETING_RESPONSES.get(input_type, GREETING_RESPONSES['greeting'])
+        return {'generation': response}
+    
+    def route_by_input_type(self, state: GraphState) -> str:
+        """Router: greeting/thanks/help → greeting_node, legal → retriever"""
+        input_type = state.get('input_type', 'legal_question')
+        if input_type in ['greeting', 'identity', 'thanks', 'help']:
+            return 'greeting_node'
+        return 'retriever'
+    
     def build_graph(self):
-        workflow=StateGraph(GraphState)
+        workflow = StateGraph(GraphState)
 
-        workflow.add_node('retriever',self.retriever_node)  
-        workflow.add_node('generation',self.generation_node)
+        # Thêm các nodes
+        workflow.add_node('classifier', self.classifier_node)
+        workflow.add_node('greeting_node', self.greeting_node)
+        workflow.add_node('retriever', self.retriever_node)  
+        workflow.add_node('generation', self.generation_node)
 
-        workflow.set_entry_point('retriever')
-        workflow.add_edge('retriever','generation')
-        workflow.add_edge('generation',END)     
+        # Entry point là classifier
+        workflow.set_entry_point('classifier')
+        
+        # Conditional edge: sau classifier, route theo loại input
+        workflow.add_conditional_edges(
+            'classifier',
+            self.route_by_input_type,
+            {
+                'greeting_node': 'greeting_node',
+                'retriever': 'retriever'
+            }
+        )
+        
+        # greeting_node → END
+        workflow.add_edge('greeting_node', END)
+        
+        # retriever → generation → END
+        workflow.add_edge('retriever', 'generation')
+        workflow.add_edge('generation', END)     
         
         return workflow.compile()
