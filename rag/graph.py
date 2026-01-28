@@ -75,11 +75,11 @@ def classify_input(question: str) -> str:
 class RAGGraph:
     def __init__(self,retriever_chain):
         self.retriever=retriever_chain
-        # models='llama-3.3-70b-versatile'
-        models='llama-3.1-8b-instant'
+        models='llama-3.3-70b-versatile'
+        # models='llama-3.1-8b-instant'
         self.llm=ChatGroq(
             model=models,
-            temperature=0.1,
+            temperature=0,
             model_kwargs={
                 "presence_penalty": 0.6,  
                 "frequency_penalty": 1.2
