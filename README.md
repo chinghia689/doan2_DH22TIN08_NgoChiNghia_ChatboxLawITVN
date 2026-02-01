@@ -625,8 +625,8 @@ SOFTWARE.
 
 ### Contact
 
-- 📧 Email: your.email@example.com
-- 🔗 GitHub: [@yourusername](https://github.com/yourusername)
+- 📧 Email: chinghia689@gmail.com.com
+- 🔗 GitHub: [@chinghia689](https://github.com/chinghia689)
 
 ---
 
