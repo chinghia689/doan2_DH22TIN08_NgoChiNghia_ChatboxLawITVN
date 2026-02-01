@@ -627,7 +627,7 @@ SOFTWARE.
 
 ### Contact
 
-- 📧 Email: chinghia689@gmail.com.com
+- 📧 Email: chinghia689@gmail.com
 - 🔗 GitHub: [@chinghia689](https://github.com/chinghia689)
 
 ---
