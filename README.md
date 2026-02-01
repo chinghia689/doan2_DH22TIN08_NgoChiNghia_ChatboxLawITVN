@@ -4,6 +4,8 @@
 
 **Hệ thống chatbot tư vấn pháp luật công nghệ thông tin sử dụng RAG (Retrieval-Augmented Generation) và LLM**
 
+Bạn có thể vào link này để hỏi đáp luật: lawchat.me
+
 [![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com/)
 [![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactjs.org/)
 [![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
